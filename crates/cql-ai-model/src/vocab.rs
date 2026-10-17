@@ -113,6 +113,9 @@ pub const COL_SET: u32 = ROLE_BASE + 9;
 pub const COL_MAP: u32 = ROLE_BASE + 10;
 pub const COL_COUNTER: u32 = ROLE_BASE + 11;
 pub const COL_UNKNOWN: u32 = ROLE_BASE + 12;
+/// `TABLE` is used for single-column partition keys; these mark tables with 2 and 3+ partition columns.
+pub const TABLE_PK2: u32 = ROLE_BASE + 13;
+pub const TABLE_PK3: u32 = ROLE_BASE + 14;
 
 pub const HASH_BUCKETS: u32 = 64;
 const HASH_BASE: u32 = 176;

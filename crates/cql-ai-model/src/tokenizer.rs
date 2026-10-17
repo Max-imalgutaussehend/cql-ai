@@ -41,7 +41,7 @@ impl Role {
 /// Column roles of every table, used to turn identifiers into role tokens.
 #[derive(Clone, Debug, Default)]
 pub struct SchemaInfo {
-    tables: HashMap<String, HashMap<String, Role>>,
+    tables: HashMap<String, (usize, HashMap<String, Role>)>,
 }
 
 impl SchemaInfo {
@@ -72,7 +72,7 @@ impl SchemaInfo {
                 };
                 cols.insert(c.name.to_ascii_lowercase(), role);
             }
-            tables.insert(t.name.to_ascii_lowercase(), cols);
+            tables.insert(t.name.to_ascii_lowercase(), (t.partition_key.len(), cols));
         }
         SchemaInfo { tables }
     }
@@ -186,7 +186,13 @@ fn find_table<'a>(kinds: &[&'a TokenKind]) -> Option<(usize, &'a str)> {
 
 fn encode_kinds(kinds: &[&TokenKind], schema: &SchemaInfo) -> Vec<u32> {
     let table = find_table(kinds);
-    let cols = table.and_then(|(_, t)| schema.tables.get(&t.to_ascii_lowercase()));
+    let info = table.and_then(|(_, t)| schema.tables.get(&t.to_ascii_lowercase()));
+    let cols = info.map(|(_, c)| c);
+    let table_token = match info.map_or(1, |(n, _)| *n) {
+        0 | 1 => TABLE,
+        2 => TABLE_PK2,
+        _ => TABLE_PK3,
+    };
     let mut ids = Vec::with_capacity(kinds.len() + 1);
     ids.push(CLS);
     for (i, k) in kinds.iter().enumerate() {
@@ -194,7 +200,7 @@ fn encode_kinds(kinds: &[&TokenKind], schema: &SchemaInfo) -> Vec<u32> {
             Some(word) => {
                 let lower = word.to_ascii_lowercase();
                 if table.is_some_and(|(at, _)| at == i) {
-                    TABLE
+                    table_token
                 } else if let Some(role) = cols.and_then(|c| c.get(&lower)) {
                     role.token()
                 } else if let Some(kw) = matches!(k, TokenKind::Ident(_))
@@ -236,7 +242,7 @@ mod tests {
         assert!(ids.contains(&COL_PK));
         assert!(ids.contains(&COL_CK0));
         assert!(ids.contains(&COL_REG));
-        assert!(ids.contains(&TABLE));
+        assert!(ids.contains(&TABLE_PK2));
         assert!(ids.contains(&keyword_id("filtering").unwrap()));
     }
 
