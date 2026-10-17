@@ -1,0 +1,31 @@
+# Drop this file into your project as .github/workflows/cql-ai.yml.
+#
+# Runs the cql-ai anti-pattern check on every pull request. The model (~2 MB) is fetched from
+# Hugging Face once and cached, so steady-state runs only pay for the check itself (< 500 ms).
+name: cql-ai
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  cql-ai:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/cql-ai
+          key: cql-ai-model-v1
+
+      - name: Install cql-ai
+        run: |
+          curl -fsSL https://github.com/Max-imalgutaussehend/cql-ai/releases/latest/download/cql-ai-x86_64-unknown-linux-gnu.tar.gz \
+            | sudo tar -xz -C /usr/local/bin cql-ai
+
+      - name: Check CQL
+        # Queries live in queries/, the CREATE TABLE statements in schema/.
+        # --deny-warnings fails the job when an anti-pattern is predicted.
+        run: cql-ai check queries/ --schema schema/ --deny-warnings
