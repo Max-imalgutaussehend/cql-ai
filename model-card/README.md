@@ -23,12 +23,23 @@ tokens** (no text tokenizer). Part of the [cqlz family](https://github.com/Max-i
 
 ## Training data
 
-100,000 synthetic statements over 600 random schemas, labelled by `cqlc-core`'s analyzer
+100,000 synthetic statements over 600 random schemas (6 epochs, AdamW), labelled by `cqlc-core`'s analyzer
 (plus a generator rule for `LargeCollectionUpdate`). See the repository for the generator.
 
 ## Evaluation
 
-CARD_RESULTS_PLACEHOLDER
+10,000 fresh statements from unseen schemas, threshold 0.5:
+
+| Label | Precision | Recall | F1 |
+|---|---|---|---|
+| MissingPartitionKey | 0.879 | 0.891 | 0.885 |
+| InefficientAllowFiltering | 1.000 | 1.000 | 1.000 |
+| NonKeyRestriction | 1.000 | 1.000 | 1.000 |
+| ClusteringGap | 1.000 | 1.000 | 1.000 |
+| OrderByMismatch | 0.997 | 0.954 | 0.975 |
+| LargeCollectionUpdate | 1.000 | 0.998 | 0.999 |
+
+Macro-F1 0.977, exact match 0.949. Synthetic distribution only.
 
 ## Limitations
 

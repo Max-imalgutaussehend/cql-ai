@@ -71,14 +71,32 @@ analyzer rejects for unrelated reasons are discarded. Validation uses schemas th
 ```sh
 cargo run --release -p cql-ai-train -- generate --count 100000 --out data.jsonl   # inspect the dataset
 cargo run --release -p cql-ai-train --features wgpu -- train \
-    --train-count 100000 --val-count 5000 --epochs 10 --batch-size 256 --lr 2e-3 --out artifacts
+    --train-count 100000 --val-count 5000 --epochs 6 --batch-size 256 --lr 2e-3 --out artifacts
 cargo run --release -p cql-ai-train -- eval --model artifacts                     # fresh unseen schemas
 ```
 
 Training uses AdamW with warm-up and cosine decay on BCE-with-logits. `--features wgpu` trains through
 Burn's wgpu backend (Metal/Vulkan/DX12); without it everything runs on the pure-Rust CPU backend.
 
-RESULTS_PLACEHOLDER
+## Results
+
+Trained 6 epochs on 100,000 synthetic statements (≈20 min on an Apple GPU through wgpu). Evaluated on
+10,000 fresh statements from **schemas not seen in training**, threshold 0.5:
+
+| Label | Precision | Recall | F1 |
+|---|---|---|---|
+| `MissingPartitionKey` | 0.879 | 0.891 | 0.885 |
+| `InefficientAllowFiltering` | 1.000 | 1.000 | 1.000 |
+| `NonKeyRestriction` | 1.000 | 1.000 | 1.000 |
+| `ClusteringGap` | 1.000 | 1.000 | 1.000 |
+| `OrderByMismatch` | 0.997 | 0.954 | 0.975 |
+| `LargeCollectionUpdate` | 1.000 | 0.998 | 0.999 |
+
+Macro-F1 **0.977**, exact label-set match **0.949**. The weak spot is `MissingPartitionKey`, the only
+label that needs counting restricted columns against the key size (including `INSERT`/`UPDATE`/`DELETE`
+variants); the table token carries the partition-key size (1, 2 or 3+) to help. Treat 0.5 as a
+starting threshold, not gospel. Numbers come from synthetic data: they measure fidelity to `cqlc`'s
+analyzer on the generator's distribution, not accuracy on arbitrary real-world CQL.
 
 ## Use it
 
@@ -97,7 +115,7 @@ on CPU and prints compiler-style diagnostics. Exit codes: `0` ok, `1` warnings w
 
 Copy [`templates/cql-ai.yml`](templates/cql-ai.yml) to `.github/workflows/cql-ai.yml`. It caches the
 model, installs the release binary and runs `cql-ai check queries/ --schema schema/ --deny-warnings`.
-With a warm cache the check itself takes TIMING_PLACEHOLDER.
+With a warm cache the check itself takes about 50 ms wall-clock for 36 statements, including process start and loading the 2.3 MB weights (Apple M-series, release build; the inference itself is ~15 ms).
 
 ## Publishing (maintainer notes)
 
