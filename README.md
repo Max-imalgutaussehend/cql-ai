@@ -32,8 +32,10 @@ fixed integer id; keywords have their own ids; identifiers are either
 * one of 64 hash buckets otherwise.
 
 So `SELECT body FROM events WHERE tenant = ? AND ts > ?` becomes about 15 ids from a vocabulary of
-~240, and the model sees *structure and key roles*, not strings. Sequences are 5–10× shorter than
-character/BPE tokens and the vocabulary is tiny, so the model can be tiny too.
+~240, and the model sees *structure and key roles*, not strings. Measured on cqlc's `shop` example:
+18 ids per statement vs 86 bytes (4.8× shorter than bytes; roughly 1.4× shorter than a typical
+~3.5-bytes-per-token BPE, which was estimated, not run) with a vocabulary of 240 instead of ~50,000.
+That tiny vocabulary, not raw sequence length, is what lets the model be tiny.
 
 ```text
 [CLS] SELECT COL_REG FROM TABLE WHERE COL_PK = BIND AND COL_CK0 > BIND
