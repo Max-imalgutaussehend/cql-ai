@@ -1,0 +1,27 @@
+[package]
+name = "cql-ai-train"
+description = "Synthetic CQL dataset generator (labelled by cqlc-core) and training loop for the cql-ai anti-pattern Transformer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+authors.workspace = true
+readme = "README.md"
+
+[features]
+# GPU training through burn's wgpu backend (Metal/Vulkan/DX12). The default build is CPU-only.
+wgpu = ["burn/wgpu"]
+
+[dependencies]
+cql-ai-model = { workspace = true, features = ["autodiff"] }
+burn = { workspace = true, features = ["autodiff", "optim", "flex"] }
+cqlc-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+clap = { version = "4", features = ["derive"] }
+rand = "0.9"
