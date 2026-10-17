@@ -1,0 +1,27 @@
+[package]
+name = "cql-ai-model"
+description = "Tiny Transformer encoder over cqlc-core lexer tokens that detects CQL anti-patterns"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+authors.workspace = true
+readme = "README.md"
+
+[features]
+# Autodiff support (needed for training and `Module::valid`).
+autodiff = ["burn/autodiff"]
+
+[dependencies]
+burn = { workspace = true, features = ["flex"] }
+cqlc-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
