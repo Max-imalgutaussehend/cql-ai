@@ -124,8 +124,9 @@ With a warm cache the check itself takes about 50 ms wall-clock for 36 statement
 ```sh
 # 1. weights to Hugging Face (needs a write token for Max-imumlikelihood)
 export HF_TOKEN=hf_...
+pip install -U "huggingface_hub[hf_xet]"
 python3 scripts/push_to_hf.py --dry-run      # inspect
-python3 scripts/push_to_hf.py                # or: scripts/push_to_hf.sh (curl + jq)
+python3 scripts/push_to_hf.py                # or: hf upload <repo> artifacts/model.safetensors artifacts/config.json
 
 # 2. crates, in dependency order
 cargo publish -p cql-ai-model
