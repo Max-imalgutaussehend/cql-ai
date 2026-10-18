@@ -110,7 +110,7 @@ cql-ai check queries/ --schema schema/ [--threshold 0.5] [--deny-warnings] [--fo
 On first run the CLI downloads `model.safetensors` + `config.json` from
 [`Max-imalgutaussehend/cql-anti-pattern-transformer`](https://huggingface.co/Max-imalgutaussehend/cql-anti-pattern-transformer)
 into `~/.cache/cql-ai/` (override with `CQL_AI_CACHE`; `--model <dir>` uses local files; `--offline`
-never touches the network; `HF_TOKEN` is sent if set). It then lexes every statement, runs the model
+never touches the network; `HF_TOKEN` is sent if set; `CQL_AI_HF_REPO` overrides the repository). It then lexes every statement, runs the model
 on CPU and prints compiler-style diagnostics. Exit codes: `0` ok, `1` warnings with `--deny-warnings`, `2` error.
 
 ### GitHub Actions

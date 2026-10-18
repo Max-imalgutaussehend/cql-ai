@@ -8,6 +8,11 @@ use std::time::Duration;
 /// Hugging Face repository holding the published weights.
 pub const HF_REPO: &str = "Max-imalgutaussehend/cql-anti-pattern-transformer";
 
+/// `$CQL_AI_HF_REPO` overrides [`HF_REPO`] (forks, a differently named Hugging Face account).
+fn repo() -> String {
+    std::env::var("CQL_AI_HF_REPO").unwrap_or_else(|_| HF_REPO.to_string())
+}
+
 /// `$CQL_AI_CACHE`, else `$XDG_CACHE_HOME/cql-ai`, else `~/.cache/cql-ai`.
 pub fn cache_root() -> Result<PathBuf> {
     if let Some(p) = std::env::var_os("CQL_AI_CACHE") {
@@ -39,7 +44,7 @@ pub fn resolve_model(explicit: Option<&Path>, refresh: bool, offline: bool) -> R
         }
         return Ok(dir.to_path_buf());
     }
-    let dir = cache_root()?.join(HF_REPO.replace('/', "--"));
+    let dir = cache_root()?.join(repo().replace('/', "--"));
     if complete(&dir) && !refresh {
         return Ok(dir);
     }
@@ -55,8 +60,9 @@ pub fn resolve_model(explicit: Option<&Path>, refresh: bool, offline: bool) -> R
         .unwrap_or_else(|_| "https://huggingface.co".into());
     for file in [CONFIG_FILE, WEIGHTS_FILE] {
         let url = format!(
-            "{}/{HF_REPO}/resolve/main/{file}",
-            base.trim_end_matches('/')
+            "{}/{}/resolve/main/{file}",
+            base.trim_end_matches('/'),
+            repo()
         );
         download(&url, &dir.join(file)).with_context(|| {
             format!("downloading {url}\nhint: pass --model <dir> with a local model.safetensors + config.json")

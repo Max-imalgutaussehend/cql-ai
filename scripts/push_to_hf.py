@@ -66,6 +66,17 @@ def main():
         print(f"would create {args.repo} (if missing) and commit {', '.join(files)} ({len(body)} bytes)")
         return
 
+    status, text = request(f"{args.endpoint}/api/whoami-v2", token)
+    if status != 200:
+        sys.exit(f"error: token rejected ({status}): {text}")
+    who = json.loads(text)
+    orgs = [o.get("name") for o in who.get("orgs", [])]
+    if namespace != who.get("name") and namespace not in orgs:
+        sys.exit(
+            f"error: this token belongs to Hugging Face user '{who.get('name')}', not '{namespace}'.\n"
+            f"       Re-run with --repo {who.get('name')}/{name}  (and set CQL_AI_HF_REPO for the CLI, see README)."
+        )
+
     status, text = request(
         f"{args.endpoint}/api/repos/create",
         token,
