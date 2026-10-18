@@ -15,7 +15,7 @@ enum Format {
 #[derive(Parser)]
 #[command(
     version,
-    about = "Detects CQL anti-patterns with a tiny Transformer over cqlc lexer tokens (cqlz family)"
+    about = "Predicts CQL performance bottlenecks with a tiny Transformer over cqlc lexer tokens and data-shape statistics (cqlz family)"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -32,12 +32,18 @@ enum Cmd {
         /// Extra schema files or directories (`CREATE TABLE ...`), repeatable.
         #[arg(long)]
         schema: Vec<PathBuf>,
+        /// TOML file with `[table]` sections: partitions, rows_per_partition, row_bytes, tombstones, indexed.
+        #[arg(long)]
+        stats: Vec<PathBuf>,
         /// Directory with model.safetensors + config.json (default: ~/.cache/cql-ai, fetched from Hugging Face).
         #[arg(long)]
         model: Option<PathBuf>,
         /// Probability at which a finding is reported.
         #[arg(long, default_value_t = 0.5)]
         threshold: f32,
+        /// Also report statements predicted at least this many times as costly as a basic operation.
+        #[arg(long, default_value_t = 20.0)]
+        min_cost: f32,
         /// Exit with status 1 when anything is reported.
         #[arg(long)]
         deny_warnings: bool,
@@ -57,8 +63,10 @@ fn run() -> Result<bool> {
         Cmd::Check {
             paths,
             schema,
+            stats,
             model,
             threshold,
+            min_cost,
             deny_warnings,
             offline,
             refresh,
@@ -69,12 +77,22 @@ fn run() -> Result<bool> {
             let (net, _) = io::load(&dir, &device)?;
             let files = check::collect_files(&paths)?;
             let schema = check::collect_files(&schema)?;
-            let report = check::analyze(&files, &schema, &net, &device, threshold)?;
+            let report = check::analyze(
+                &files,
+                &schema,
+                &stats,
+                &net,
+                &device,
+                check::Options {
+                    threshold,
+                    min_cost,
+                },
+            )?;
             match format {
                 Format::Text => eprint!("{}", check::render(&report)),
                 Format::Json => println!("{}", serde_json::to_string_pretty(&report)?),
             }
-            Ok(deny_warnings && !report.findings.is_empty())
+            Ok(deny_warnings && !(report.findings.is_empty() && report.slow_statements.is_empty()))
         }
     }
 }

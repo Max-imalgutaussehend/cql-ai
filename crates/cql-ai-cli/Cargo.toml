@@ -1,6 +1,6 @@
 [package]
 name = "cql-ai-cli"
-description = "CI/CD linter that flags CQL anti-patterns with a tiny Transformer running on lexer tokens; fetches weights from Hugging Face"
+description = "CI linter that predicts CQL performance bottlenecks (large partitions, scatter-gather, tombstones, write cost, hot keys) with a tiny Transformer trained on measured data"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -29,6 +29,8 @@ anyhow = { workspace = true }
 clap = { version = "4", features = ["derive"] }
 walkdir = "2"
 ureq = "3"
+toml = "0.9"
+cqlc-core = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"

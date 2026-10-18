@@ -172,6 +172,8 @@ pub fn kind_id(kind: &TokenKind) -> u32 {
             String(_) => 21,
             Uuid(_) => 22,
             Blob(_) => 23,
+            Slash => 24,
+            Percent => 25,
             // Identifiers are resolved by the caller; keep the arm total.
             Ident(_) | QuotedIdent(_) => return UNK,
             Eof => return UNK,
@@ -184,7 +186,7 @@ mod tests {
 
     #[test]
     fn ids_are_disjoint_and_in_range() {
-        const { assert!(PUNCT_BASE + 24 <= KEYWORD_BASE) };
+        const { assert!(PUNCT_BASE + 26 <= KEYWORD_BASE) };
         const { assert!(USED_IDS as usize <= VOCAB_SIZE) };
         assert!(KEYWORD_BASE + KEYWORDS.len() as u32 <= ROLE_BASE);
         assert!(bucket_id("anything") >= HASH_BASE && bucket_id("anything") < USED_IDS);

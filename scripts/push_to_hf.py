@@ -14,7 +14,7 @@ import argparse
 import os
 import sys
 
-DEFAULT_REPO = "Max-imumlikelihood/cql-anti-pattern-transformer"
+DEFAULT_REPO = "Max-imumlikelihood/cql-hpc-bottleneck-transformer"
 
 
 def main():
@@ -23,14 +23,24 @@ def main():
     ap.add_argument("--dir", default="artifacts", help="directory with model.safetensors and config.json")
     ap.add_argument("--card", default="model-card/README.md", help="model card, uploaded as README.md")
     ap.add_argument("--private", action="store_true")
+    ap.add_argument("--dataset", action="store_true", help="upload data/*.jsonl as the dataset Max-imumlikelihood/cql-hpc-bench instead of the model")
     ap.add_argument("--dry-run", action="store_true", help="check inputs and the token, upload nothing")
     args = ap.parse_args()
 
-    files = {
-        "model.safetensors": os.path.join(args.dir, "model.safetensors"),
-        "config.json": os.path.join(args.dir, "config.json"),
-        "README.md": args.card,
-    }
+    if args.dataset:
+        args.repo = "Max-imumlikelihood/cql-hpc-bench"
+        args.card = "model-card/DATASET.md"
+        files = {
+            "cql-hpc-scylla.jsonl": "data/cql-hpc-scylla.jsonl",
+            "cql-hpc-cassandra.jsonl": "data/cql-hpc-cassandra.jsonl",
+            "README.md": args.card,
+        }
+    else:
+        files = {
+            "model.safetensors": os.path.join(args.dir, "model.safetensors"),
+            "config.json": os.path.join(args.dir, "config.json"),
+            "README.md": args.card,
+        }
     for name, path in files.items():
         if not os.path.isfile(path):
             sys.exit(f"error: missing {path} (needed as {name})")
@@ -57,13 +67,14 @@ def main():
         print(f"dry run: token ok for '{who['name']}', would upload {', '.join(files)} to {args.repo}")
         return
 
-    api.create_repo(args.repo, repo_type="model", private=args.private, exist_ok=True)
+    api.create_repo(args.repo, repo_type="dataset" if args.dataset else "model", private=args.private, exist_ok=True)
     api.create_commit(
         args.repo,
+        repo_type="dataset" if args.dataset else "model",
         operations=[CommitOperationAdd(path_in_repo=n, path_or_fileobj=p) for n, p in files.items()],
-        commit_message="Upload cql-ai anti-pattern transformer",
+        commit_message="Upload cql-hpc " + ("dataset" if args.dataset else "model"),
     )
-    print(f"uploaded: https://huggingface.co/{args.repo}")
+    print(f"uploaded: https://huggingface.co/{"datasets/" if args.dataset else ""}{args.repo}")
 
 
 if __name__ == "__main__":

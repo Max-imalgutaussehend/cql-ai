@@ -5,43 +5,30 @@ tags:
   - cql
   - cassandra
   - scylladb
-  - static-analysis
+  - performance
   - safetensors
-pipeline_tag: text-classification
+datasets:
+  - Max-imumlikelihood/cql-hpc-bench
 ---
 
-# cql-anti-pattern-transformer
+# cql-hpc-bottleneck-transformer
 
-Tiny (576k parameters) Transformer encoder that predicts CQL anti-patterns from **`cqlc-core` lexer
-tokens** (no text tokenizer). Part of the [cqlz family](https://github.com/Max-imalgutaussehend/cql-ai).
+Tiny (578k parameters) Transformer that predicts **CQL performance bottlenecks** from `cqlc-core` lexer tokens plus the shape of the data
+(partitions, rows per partition, row bytes, tombstones, index) and statement literals (`LIMIT`, `IN` length, batch size).
+Part of the [cqlz family](https://github.com/Max-imalgutaussehend/cql-ai).
 
-* Input: a CQL statement lexed by `cqlc-core`, identifiers replaced by schema role tokens.
-* Output: 6 independent probabilities — `MissingPartitionKey`, `InefficientAllowFiltering`,
-  `NonKeyRestriction`, `ClusteringGap`, `OrderByMismatch`, `LargeCollectionUpdate`.
-* Files: `model.safetensors` (weights, Burn module paths), `config.json` (Burn `ModelConfig`).
-* Use with the `cql-ai` CLI: `cargo install cql-ai-cli && cql-ai check queries/ --schema schema/`.
+* Output: six bottleneck probabilities (`LargeResult`, `ServerScan`, `FanOut`, `TombstoneScan`, `WriteCost`, `LightweightTxn`) and `log10(cost / baseline)`.
+* Trained on **measured** latencies of public workload shapes (NoSQLBench, cassandra-stress, YCSB, TSBS, KillrVideo) on ScyllaDB and Cassandra 5.0:
+  [`cql-hpc-bench`](https://huggingface.co/datasets/Max-imumlikelihood/cql-hpc-bench).
+* Files: `model.safetensors`, `config.json` (Burn `ModelConfig`). Use with `cargo install cql-ai-cli && cql-ai check queries/ --schema schema/`.
 
-## Training data
+## Evaluation (model trained on ScyllaDB only; Macro-F1)
 
-100,000 synthetic statements over 600 random schemas (6 epochs, AdamW), labelled by `cqlc-core`'s analyzer
-(plus a generator rule for `LargeCollectionUpdate`). See the repository for the generator.
-
-## Evaluation
-
-10,000 fresh statements from unseen schemas, threshold 0.5:
-
-| Label | Precision | Recall | F1 |
+| Test set | with data stats | without | keyword baseline |
 |---|---|---|---|
-| MissingPartitionKey | 0.879 | 0.891 | 0.885 |
-| InefficientAllowFiltering | 1.000 | 1.000 | 1.000 |
-| NonKeyRestriction | 1.000 | 1.000 | 1.000 |
-| ClusteringGap | 1.000 | 1.000 | 1.000 |
-| OrderByMismatch | 0.997 | 0.954 | 0.975 |
-| LargeCollectionUpdate | 1.000 | 0.998 | 0.999 |
+| unseen worlds | 0.855 | 0.683 | 0.557 |
+| unseen workload families | 0.889 | 0.674 | 0.624 |
+| other engine (Cassandra 5.0) | 0.802 | 0.624 | 0.516 |
 
-Macro-F1 0.977, exact match 0.949. Synthetic distribution only.
-
-## Limitations
-
-Synthetic training data; needs the table schema to assign key roles; not a substitute for
-`cqlc`'s deterministic analysis.
+The released weights are trained on both engines pooled (same recipe). See the repository README for definitions, thresholds and limitations
+(single node in Docker on one machine; no hot-key label because no signal was observable there).

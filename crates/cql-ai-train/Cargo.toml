@@ -1,6 +1,6 @@
 [package]
 name = "cql-ai-train"
-description = "Synthetic CQL dataset generator (labelled by cqlc-core) and training loop for the cql-ai anti-pattern Transformer"
+description = "Dataset loading, labelling from measurements, training and honest evaluation of the cql-ai performance bottleneck Transformer"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

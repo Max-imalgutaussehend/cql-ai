@@ -1,4 +1,7 @@
-//! Dataset synthesis and training for the cql-ai anti-pattern Transformer.
+#![allow(clippy::needless_range_loop)] // index loops over the label axis are intentional
+//! Dataset loading, labelling from measurements, training and evaluation for cql-ai.
 
-pub mod synth;
+pub mod baseline;
+pub mod dataset;
+pub mod labels;
 pub mod train;

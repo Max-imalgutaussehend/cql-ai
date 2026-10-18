@@ -41,7 +41,33 @@ impl Role {
 /// Column roles of every table, used to turn identifiers into role tokens.
 #[derive(Clone, Debug, Default)]
 pub struct SchemaInfo {
-    tables: HashMap<String, (usize, HashMap<String, Role>)>,
+    tables: HashMap<String, TableInfo>,
+}
+
+/// What the model needs to know about one table.
+#[derive(Clone, Debug, Default)]
+pub struct TableInfo {
+    cols: HashMap<String, Role>,
+    partition_cols: usize,
+    /// The table has a secondary index.
+    pub indexed: bool,
+    /// Estimated stored bytes per row, from the column types.
+    pub row_bytes: f64,
+}
+
+fn type_bytes(t: &CqlType) -> f64 {
+    match t {
+        CqlType::Boolean | CqlType::TinyInt => 1.0,
+        CqlType::SmallInt => 2.0,
+        CqlType::Int | CqlType::Float | CqlType::Date | CqlType::Time => 4.0,
+        CqlType::BigInt | CqlType::Double | CqlType::Timestamp | CqlType::Counter => 8.0,
+        CqlType::Uuid | CqlType::TimeUuid | CqlType::Inet => 16.0,
+        CqlType::Ascii | CqlType::Text => 40.0,
+        CqlType::Frozen(t) => type_bytes(t),
+        CqlType::Vector(t, n) => type_bytes(t) * f64::from(*n),
+        CqlType::List(_) | CqlType::Set(_) | CqlType::Map(..) => 128.0,
+        _ => 32.0,
+    }
 }
 
 impl SchemaInfo {
@@ -72,7 +98,15 @@ impl SchemaInfo {
                 };
                 cols.insert(c.name.to_ascii_lowercase(), role);
             }
-            tables.insert(t.name.to_ascii_lowercase(), (t.partition_key.len(), cols));
+            tables.insert(
+                t.name.to_ascii_lowercase(),
+                TableInfo {
+                    cols,
+                    partition_cols: t.partition_key.len(),
+                    indexed: !t.indexes.is_empty(),
+                    row_bytes: t.columns.iter().map(|c| type_bytes(&c.cql_type)).sum(),
+                },
+            );
         }
         SchemaInfo { tables }
     }
@@ -85,6 +119,16 @@ impl SchemaInfo {
 
     pub fn is_empty(&self) -> bool {
         self.tables.is_empty()
+    }
+
+    /// The table a statement reads or writes (`FROM`, `UPDATE`, `INTO`), if the schema knows it.
+    pub fn table_of(&self, stmt: &str) -> Option<(&str, &TableInfo)> {
+        let (lexed, _) = lex(FileId(0), stmt);
+        let kinds: Vec<&TokenKind> = lexed.tokens.iter().map(|t| &t.kind).collect();
+        let (_, name) = find_table(&kinds)?;
+        self.tables
+            .get_key_value(&name.to_ascii_lowercase())
+            .map(|(k, v)| (k.as_str(), v))
     }
 }
 
@@ -187,8 +231,8 @@ fn find_table<'a>(kinds: &[&'a TokenKind]) -> Option<(usize, &'a str)> {
 fn encode_kinds(kinds: &[&TokenKind], schema: &SchemaInfo) -> Vec<u32> {
     let table = find_table(kinds);
     let info = table.and_then(|(_, t)| schema.tables.get(&t.to_ascii_lowercase()));
-    let cols = info.map(|(_, c)| c);
-    let table_token = match info.map_or(1, |(n, _)| *n) {
+    let cols = info.map(|i| &i.cols);
+    let table_token = match info.map_or(1, |i| i.partition_cols) {
         0 | 1 => TABLE,
         2 => TABLE_PK2,
         _ => TABLE_PK3,

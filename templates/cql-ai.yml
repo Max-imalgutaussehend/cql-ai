@@ -1,6 +1,6 @@
 # Drop this file into your project as .github/workflows/cql-ai.yml.
 #
-# Runs the cql-ai anti-pattern check on every pull request. The model (~2 MB) is fetched from
+# Runs the cql-ai performance bottleneck check on every pull request. The model (~2 MB) is fetched from
 # Hugging Face once and cached, so steady-state runs only pay for the check itself (< 500 ms).
 name: cql-ai
 on:
@@ -26,6 +26,8 @@ jobs:
             | sudo tar -xz -C /usr/local/bin cql-ai
 
       - name: Check CQL
-        # Queries live in queries/, the CREATE TABLE statements in schema/.
+        # Queries live in queries/, the CREATE TABLE statements in schema/. Add
+        #   -- hpc: partitions=200000 rows=10000
+        # above a CREATE TABLE so the model knows how much data a statement touches.
         # --deny-warnings fails the job when an anti-pattern is predicted.
         run: cql-ai check queries/ --schema schema/ --deny-warnings

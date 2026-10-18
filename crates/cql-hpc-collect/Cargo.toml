@@ -1,0 +1,26 @@
+[package]
+name = "cql-hpc-collect"
+description = "Measures real CQL performance on public workload shapes (NoSQLBench, cassandra-stress, YCSB, TSBS, KillrVideo) to build the cql-hpc bottleneck dataset"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+keywords = ["cql", "cassandra", "scylla", "benchmark", "dataset"]
+categories = ["database", "development-tools"]
+readme = "README.md"
+
+[dependencies]
+scylla = "1.9"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+futures = "0.3"
+uuid = { version = "1", features = ["v4"] }
+rand = "0.9"
+rand_distr = "0.5"
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+clap = { version = "4", features = ["derive"] }
+async-trait = "0.1"

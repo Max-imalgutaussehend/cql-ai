@@ -1,0 +1,8 @@
+Public workload definitions the cql-hpc benchmark worlds are modelled on. Files are copied unmodified.
+
+nb-*.yaml   NoSQLBench baselines (cql-iot, cql-keyvalue2, cql-tabular2, cql-timeseries2),
+            https://github.com/nosqlbench/nosqlbench, Apache License 2.0.
+cs-*.yaml   cassandra-stress profiles, https://github.com/apache/cassandra (tools/), Apache License 2.0.
+
+Further workload shapes used by the collector: YCSB core workloads (usertable), the TSBS "cpu" time-series layout and the
+KillrVideo comments model (https://github.com/KillrVideo/killrvideo-data, Apache License 2.0).
