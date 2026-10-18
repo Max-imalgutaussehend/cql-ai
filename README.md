@@ -108,7 +108,7 @@ cql-ai check queries/ --schema schema/ [--threshold 0.5] [--deny-warnings] [--fo
 ```
 
 On first run the CLI downloads `model.safetensors` + `config.json` from
-[`Max-imalgutaussehend/cql-anti-pattern-transformer`](https://huggingface.co/Max-imalgutaussehend/cql-anti-pattern-transformer)
+[`Max-imumlikelihood/cql-anti-pattern-transformer`](https://huggingface.co/Max-imumlikelihood/cql-anti-pattern-transformer)
 into `~/.cache/cql-ai/` (override with `CQL_AI_CACHE`; `--model <dir>` uses local files; `--offline`
 never touches the network; `HF_TOKEN` is sent if set; `CQL_AI_HF_REPO` overrides the repository). It then lexes every statement, runs the model
 on CPU and prints compiler-style diagnostics. Exit codes: `0` ok, `1` warnings with `--deny-warnings`, `2` error.
@@ -122,7 +122,7 @@ With a warm cache the check itself takes about 50 ms wall-clock for 36 statement
 ## Publishing (maintainer notes)
 
 ```sh
-# 1. weights to Hugging Face (needs a write token for Max-imalgutaussehend)
+# 1. weights to Hugging Face (needs a write token for Max-imumlikelihood)
 export HF_TOKEN=hf_...
 python3 scripts/push_to_hf.py --dry-run      # inspect
 python3 scripts/push_to_hf.py                # or: scripts/push_to_hf.sh (curl + jq)

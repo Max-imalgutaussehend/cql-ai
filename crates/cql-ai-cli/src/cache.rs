@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 /// Hugging Face repository holding the published weights.
-pub const HF_REPO: &str = "Max-imalgutaussehend/cql-anti-pattern-transformer";
+pub const HF_REPO: &str = "Max-imumlikelihood/cql-anti-pattern-transformer";
 
 /// `$CQL_AI_HF_REPO` overrides [`HF_REPO`] (forks, a differently named Hugging Face account).
 fn repo() -> String {

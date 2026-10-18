@@ -17,7 +17,7 @@ import sys
 import urllib.error
 import urllib.request
 
-DEFAULT_REPO = "Max-imalgutaussehend/cql-anti-pattern-transformer"
+DEFAULT_REPO = "Max-imumlikelihood/cql-anti-pattern-transformer"
 
 
 def request(url, token, data=None, content_type="application/json"):

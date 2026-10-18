@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # cURL variant of push_to_hf.py. Needs: curl, base64, jq.   HF_TOKEN=hf_... scripts/push_to_hf.sh
 set -euo pipefail
-REPO="${REPO:-Max-imalgutaussehend/cql-anti-pattern-transformer}"
+REPO="${REPO:-Max-imumlikelihood/cql-anti-pattern-transformer}"
 DIR="${DIR:-artifacts}"
 CARD="${CARD:-model-card/README.md}"
 ENDPOINT="${HF_ENDPOINT:-https://huggingface.co}"

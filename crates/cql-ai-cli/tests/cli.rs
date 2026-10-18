@@ -117,7 +117,7 @@ fn model_is_downloaded_once_and_then_served_from_cache() {
     assert!(
         served
             .iter()
-            .all(|p| p.contains("Max-imalgutaussehend/cql-anti-pattern-transformer/resolve/main/")),
+            .all(|p| p.contains("Max-imumlikelihood/cql-anti-pattern-transformer/resolve/main/")),
         "{served:?}"
     );
 
